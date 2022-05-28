@@ -82,11 +82,11 @@ services:
     depends_on:
       - cgw-redis
 
-  # ui:
-  #   image: gnosispm/safe-react
-  #   env_file:
-  #     - container_env_files/ui.env
-  #   depends_on:
-  #     - nginx
-  #   ports:
-  #     - "${REVERSE_PROXY_UI_PORT}:3000"
+  ui:
+    image: drboolean/safe-react
+    env_file:
+      - container_env_files/ui.env
+    depends_on:
+      - nginx
+    ports:
+      - "${REVERSE_PROXY_UI_PORT}:3000"
