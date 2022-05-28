@@ -16,7 +16,8 @@ services:
       - nginx-shared-txs:/nginx-txs
       - nginx-shared-cfg:/nginx-cfg
     depends_on:
-      - txs-web
+      - txs-web-testnet
+      - txs-web-mainnet
       - cfg-web
       - cgw-web
 
@@ -26,12 +27,44 @@ services:
       POSTGRES_PASSWORD: postgres
     volumes:
       - ./data/db:/var/lib/postgresql/data
+  
 
-  # Safe Transaction Service
+  # Safe Transaction Service Mainnet
   txs-redis:
     image: redis:alpine
 
-  txs-web:
+  txs-web-mainnet:
+    image: drboolean/safe-transaction-service
+    env_file:
+      - container_env_files/txs2.env
+    environment:
+      - ETHEREUM_NODE_URL=${RPC_NODE_URL2}
+    depends_on:
+      - db
+      - txs-redis
+    working_dir: /app
+    volumes:
+      - nginx-shared-txs:/nginx
+    command: docker/web/run_web.sh
+
+  txs-worker-mainnet: &worker
+    image: drboolean/safe-transaction-service
+    env_file:
+      - container_env_files/txs2.env
+    environment:
+      - ETHEREUM_NODE_URL=${RPC_NODE_URL2}
+    depends_on:
+      - db
+      - txs-redis
+    command: docker/web/celery/worker/run.sh
+
+  txs-scheduler-mainnet:
+    <<: *worker
+    command: docker/web/celery/scheduler/run.sh
+    
+  # Safe Transaction Service Testnet
+
+  txs-web-testnet:
     image: drboolean/safe-transaction-service
     env_file:
       - container_env_files/txs.env
@@ -45,7 +78,7 @@ services:
       - nginx-shared-txs:/nginx
     command: docker/web/run_web.sh
 
-  txs-worker: &worker
+  txs-worker-testnet: &worker
     image: drboolean/safe-transaction-service
     env_file:
       - container_env_files/txs.env
@@ -56,7 +89,7 @@ services:
       - txs-redis
     command: docker/web/celery/worker/run.sh
 
-  txs-scheduler:
+  txs-scheduler-testnet:
     <<: *worker
     command: docker/web/celery/scheduler/run.sh
 
